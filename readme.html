@@ -47,7 +47,7 @@ options:
 <li>From Raw Bytes, first 20 bytes are IP Header</li>
 <li>Pass it to IP class, it will use <code>struct</code> module for unpacking/extracting</li>
 <li>Extract accordingly (depending on fields)</li>
-<li>See <img alt="IP Header" src="https://github.com/ago-char/udp-scanner/blob/master/pics/ipv4-header.png" /></li>
+<li>See <img alt="IP Header" src="https://agochar272b22cedc.blob.core.windows.net/blobagochar272b22cedc/ipv4-header.png" /></li>
 </ul>
 <h2>Extracting ICMP Header</h2>
 <ul>
@@ -55,7 +55,7 @@ options:
 <li>Type and Code will live within 8 bytes after the IP Header</li>
 <li>Hence, raw_buffer[20:20+8] is enough to extract ICMP Header, pass it to ICMP class, it will also use <code>struct</code> module like IP class</li>
 <li>Extract accordingly (depending on fields)</li>
-<li>See <img alt="Dest Unreachable Message Header" src="https://github.com/ago-char/udp-scanner/blob/master/pics/icmp-dest-unreachable.png" /></li>
+<li>See <img alt="Dest Unreachable Message Header" src="https://agochar272b22cedc.blob.core.windows.net/blobagochar272b22cedc/icmp-dest-unreachable.png" /></li>
 </ul>
 <h2>Update To Expect</h2>
 <ul>
