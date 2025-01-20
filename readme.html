@@ -1,54 +1,65 @@
-<h1>Sniffer Coding Approach</h1>
-<ol>
-<li>Create a socket for the kind of packet/protocol you want to sniff. The most important thing is you gotta know that what kind of protocol is supported by your target system.</li>
-</ol>
-<pre><code class="language-python">if os.name == &quot;nt&quot;:
-    socket_protocol = socket.IPPROTO_IP
-else:
-    socket_protocol = socket.IPPROTO_ICMP
-sniffer = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket_protocol)
+<h1>UDP Scanner</h1>
+<h2>Requirements</h2>
+<p>Following Modules and their dependencies of python :</p>
+<pre><code>import socket
+import os
+import argparse
+import struct
+import requests
+import ctypes
+import ipaddress
+import threading
+import shutil
+import time
 </code></pre>
-<p>As seen protocol is determined as per the system you are running the script from.</p>
-<ol>
-<li>Bind the <code>sniffer</code> to your public interface (or any you like)</li>
-</ol>
-<pre><code class="language-python">sniffer.bind((host, 0)) # to port 0 meaning i.e all ports
+<h2>Usuage Info</h2>
+<pre><code>./udp-scanner.py -h
+usage: udp-scanner.py [-h] -lh LISTEN_HOST -tsn TARGET_SUBNET [-p PORT] [-v] [-raw] [--view-ip-header] [--view-icmp-header]
+
+options:
+  -h, --help            show this help message and exit
+  -lh LISTEN_HOST, --listen-host LISTEN_HOST
+                        IP or hostname of listening host
+  -tsn TARGET_SUBNET, --target-subnet TARGET_SUBNET
+                        Target Subnet for UDP Scan
+  -p PORT, --port PORT  Dest Port for UDP probe
+  -v, --verbose         Increase Output Verbosity, Show Address Info, Also view other packets than of icmp dest+port unreachable, This
+                        will not view raw/ip/icmp packet, use other options for that
+  -raw, --view-raw-buffer
+                        View Raw Buffer along with Decoded packet
+  --view-ip-header      View IP Header
+  --view-icmp-header    View ICMP Header
 </code></pre>
-<ol>
-<li>You will want to have IP headers included in your sniffed packet capture</li>
-</ol>
-<pre><code class="language-python"># this just means at IP level, ip header be included (1), if it was 0 meaning not include 
-sniffer.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)
-</code></pre>
-<ol>
-<li>If you are on linux, you can receive what is being captured (actually we have specified ICMP as protocol for any system other than of windows, so it will capture ICMP messages if any) but you are doing it on NT or Windows system, you gonna have to enable promicious mode that will allow to capture your card whatever it sees even if it is not intented to your host :</li>
-</ol>
-<pre><code class="language-python">if os.name == &quot;nt&quot;:
-    sniffer.ioctl(socket.SIO_RCVALL, socket.RCVALL_ON)
-</code></pre>
-<ol>
-<li>You could receive as many packets as you intend but for the sake of example and simplicity, receive one: </li>
-</ol>
-<pre><code class="language-python"># recvfrom is used instead of recv coz it returns address and data 
-received = sniffer.recvfrom(65565)
-</code></pre>
-<ol>
-<li>You will probaby receive hex form so, better to (un)hex or any you like:</li>
-</ol>
-<pre><code class="language-python">print(f&quot;Address : {received[1]}&quot;) # address at second index of tuple
-print(f&quot;Data :{received[0].hex()}&quot;) # data at first index (now hex decoded)
-</code></pre>
-<ol>
-<li>You could likely end the connection withh</li>
-</ol>
-<pre><code class="language-python">sniffer.close()
-</code></pre>
-<ol>
-<li>But if you are in windows you will like to turn the procimious mode off before closing and exiting the program:</li>
-</ol>
-<pre><code class="language-python">if os.name == &quot;nt&quot;:
-    sniffer.ioctl(socket.SIO_RCVALL, socket.RCVALL_OFF)
-sniffer.close()
-</code></pre>
-<p><strong>ALL SET AND DONE</strong>
-!sniffer.py</p>
+<h2>Coding Algorithm</h2>
+<ul>
+<li>Bind your pubic interface to receive raw packets depending on your OS</li>
+<li>Run Seperate Threads for<ul>
+<li>Sending UDP probe</li>
+<li>Keeping Track of Received Packets</li>
+<li>Sending SIGINT when sent finish (UDP packets)</li>
+</ul>
+</li>
+<li>Make sure you give enough time for the receiver to be ready before sending UDP probes, and even after completing sending</li>
+<li>If interrupted of sent finish, print Active Hosts and exit the program</li>
+</ul>
+<h2>Extracting IP Header</h2>
+<ul>
+<li>From Raw Bytes, first 20 bytes are IP Header</li>
+<li>Pass it to IP class, it will use <code>struct</code> module for unpacking/extracting</li>
+<li>Extract accordingly (depending on fields)</li>
+<li>See <img alt="IP Header" src="https://github.com/ago-char/udp-scanner/blob/master/pics/ipv4-header.png" /></li>
+</ul>
+<h2>Extracting ICMP Header</h2>
+<ul>
+<li>We are particularly interested on Type:3, Code:3; this is the type and code we should receive coz host will send this type of message when it hit to close UDP port </li>
+<li>Type and Code will live within 8 bytes after the IP Header</li>
+<li>Hence, raw_buffer[20:20+8] is enough to extract ICMP Header, pass it to ICMP class, it will also use <code>struct</code> module like IP class</li>
+<li>Extract accordingly (depending on fields)</li>
+<li>See <img alt="Dest Unreachable Message Header" src="https://github.com/ago-char/udp-scanner/blob/master/pics/icmp-dest-unreachable.png" /></li>
+</ul>
+<h2>Update To Expect</h2>
+<ul>
+<li>Use of database folder for getting messages according to the type and code of icmp message</li>
+<li>Grow database and Sniffer/Scanner to get other packets as well (like TCP in *ix systems)</li>
+<li>Add more command line options</li>
+</ul>
