@@ -1,0 +1,54 @@
+<h1>Sniffer Coding Approach</h1>
+<ol>
+<li>Create a socket for the kind of packet/protocol you want to sniff. The most important thing is you gotta know that what kind of protocol is supported by your target system.</li>
+</ol>
+<pre><code class="language-python">if os.name == &quot;nt&quot;:
+    socket_protocol = socket.IPPROTO_IP
+else:
+    socket_protocol = socket.IPPROTO_ICMP
+sniffer = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket_protocol)
+</code></pre>
+<p>As seen protocol is determined as per the system you are running the script from.</p>
+<ol>
+<li>Bind the <code>sniffer</code> to your public interface (or any you like)</li>
+</ol>
+<pre><code class="language-python">sniffer.bind((host, 0)) # to port 0 meaning i.e all ports
+</code></pre>
+<ol>
+<li>You will want to have IP headers included in your sniffed packet capture</li>
+</ol>
+<pre><code class="language-python"># this just means at IP level, ip header be included (1), if it was 0 meaning not include 
+sniffer.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)
+</code></pre>
+<ol>
+<li>If you are on linux, you can receive what is being captured (actually we have specified ICMP as protocol for any system other than of windows, so it will capture ICMP messages if any) but you are doing it on NT or Windows system, you gonna have to enable promicious mode that will allow to capture your card whatever it sees even if it is not intented to your host :</li>
+</ol>
+<pre><code class="language-python">if os.name == &quot;nt&quot;:
+    sniffer.ioctl(socket.SIO_RCVALL, socket.RCVALL_ON)
+</code></pre>
+<ol>
+<li>You could receive as many packets as you intend but for the sake of example and simplicity, receive one: </li>
+</ol>
+<pre><code class="language-python"># recvfrom is used instead of recv coz it returns address and data 
+received = sniffer.recvfrom(65565)
+</code></pre>
+<ol>
+<li>You will probaby receive hex form so, better to (un)hex or any you like:</li>
+</ol>
+<pre><code class="language-python">print(f&quot;Address : {received[1]}&quot;) # address at second index of tuple
+print(f&quot;Data :{received[0].hex()}&quot;) # data at first index (now hex decoded)
+</code></pre>
+<ol>
+<li>You could likely end the connection withh</li>
+</ol>
+<pre><code class="language-python">sniffer.close()
+</code></pre>
+<ol>
+<li>But if you are in windows you will like to turn the procimious mode off before closing and exiting the program:</li>
+</ol>
+<pre><code class="language-python">if os.name == &quot;nt&quot;:
+    sniffer.ioctl(socket.SIO_RCVALL, socket.RCVALL_OFF)
+sniffer.close()
+</code></pre>
+<p><strong>ALL SET AND DONE</strong>
+!sniffer.py</p>
