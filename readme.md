@@ -48,14 +48,14 @@ options:
 - From Raw Bytes, first 20 bytes are IP Header
 - Pass it to IP class, it will use `struct` module for unpacking/extracting
 - Extract accordingly (depending on fields)
-- See ![IP Header](https://github.com/ago-char/udp-scanner/blob/master/pics/ipv4-header.png)
+- See ![IP Header](https://agochar272b22cedc.blob.core.windows.net/blobagochar272b22cedc/ipv4-header.png)
 
 ## Extracting ICMP Header
 - We are particularly interested on Type:3, Code:3; this is the type and code we should receive coz host will send this type of message when it hit to close UDP port 
 - Type and Code will live within 8 bytes after the IP Header
 - Hence, raw_buffer[20:20+8] is enough to extract ICMP Header, pass it to ICMP class, it will also use `struct` module like IP class
 - Extract accordingly (depending on fields)
-- See ![Dest Unreachable Message Header](https://github.com/ago-char/udp-scanner/blob/master/pics/icmp-dest-unreachable.png)
+- See ![Dest Unreachable Message Header](https://agochar272b22cedc.blob.core.windows.net/blobagochar272b22cedc/icmp-dest-unreachable.png)
 
 ## Update To Expect
 - Use of database folder for getting messages according to the type and code of icmp message
